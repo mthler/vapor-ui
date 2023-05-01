@@ -4,7 +4,7 @@
             <div class="mt-6 flex space-x-3 md:mt-0 md:ml-4">
                 <div>
                     <label for="queue-input" class="block text-sm font-medium leading-5 text-gray-700">
-                        Queue name
+                        Queue name xyz
                     </label>
                     <select
                         id="queue-input"
