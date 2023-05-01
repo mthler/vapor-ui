@@ -4,7 +4,7 @@
             <div class="mt-6 flex space-x-3 md:mt-0 md:ml-4">
                 <div>
                     <label for="queue-input" class="block text-sm font-medium leading-5 text-gray-700">
-                        Queue name xyz
+                        Queue name
                     </label>
                     <select
                         id="queue-input"
@@ -40,42 +40,72 @@
             </td>
 
             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                <span
-                    :class="`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${jobColor(
-                        entry.content.payload.displayName
-                    )}-100 text-${jobColor(entry.content.payload.displayName)}-800`"
+                <router-link
+                    :to="{
+                        name: `jobs-show`,
+                        params: { id: entry.id, group: entry.group },
+                        query: entry.filters,
+                    }"
+                    tag="button"
+                    href="#"                    
                 >
-                    {{ entry.content.payload.displayName }}
-                </span>
+                    <span
+                        :class="`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${jobColor(
+                            entry.content.payload.displayName
+                        )}-100 text-${jobColor(entry.content.payload.displayName)}-800`"
+                    >
+                        {{ entry.content.payload.displayName }}
+                    </span>
+                </router-link>
             </td>
 
             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
-                {{ moment().utc(entry.timestamp, 'x').local().format('YYYY-MM-DD LTS') }}
+                <router-link
+                    :to="{
+                        name: `jobs-show`,
+                        params: { id: entry.id, group: entry.group },
+                        query: entry.filters,
+                    }"
+                    tag="button"
+                    href="#"                    
+                >
+                    {{ moment().utc(entry.timestamp, 'x').local().format('YYYY-MM-DD LTS') }}
+                </router-link>
             </td>
-            <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
-                <div class="relative flex justify-end items-center">
-                    <router-link
-                        :to="{
-                            name: `jobs-show`,
-                            params: { id: entry.id, group: entry.group },
-                            query: entry.filters,
-                        }"
-                        tag="button"
-                        href="#"
-                        class="w-8 h-8 inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:text-gray-500 focus:bg-gray-100 transition ease-in-out duration-150"
+
+            <td class="px-6 py-4 whitespace-no-wrap">
+                <span class="order-0 sm:order-1 sm:ml-3 shadow-sm rounded-md" :id="'retry-' + entry.id">
+                    <async-button
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150"
+                        :loading="running"
+                        :disabled="running"
+                        @click.native.prevent="run('retry', entry)"
                     >
-                        <icon-eye
-                            size="5"
-                            class="mr-3 text-gray-400 group-hover:text-gray-500 group-focus:text-gray-500"
-                        />
-                    </router-link>
-                </div>
+                        Retry
+                    </async-button>
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-no-wrap">
+                <span class="order-0 sm:order-1 sm:ml-3 shadow-sm rounded-md" :id="'forget-' + entry.id">
+                    <async-button
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-red-600 hover:bg-red-500 focus:outline-none focus:border-red-700 focus:shadow-outline-red active:bg-red-700 transition ease-in-out duration-150"
+                        :loading="running"
+                        :disabled="running"
+                        @click.native.prevent="run('forget', entry)"
+                    >
+                        Forget
+                    </async-button>
+                </span>
             </td>
         </template>
     </search>
 </template>
 
 <script>
+import axios from 'axios';
+
 import JobMixin from './../../mixins/job';
 
 export default {
@@ -83,5 +113,28 @@ export default {
      * The component's mixins.
      */
     mixins: [JobMixin],
+
+    /**
+     * The component's methods.
+     */
+     methods: {
+        /**
+         * Retries the given job.
+         */
+        run(action, entry) {
+            if (this.running) return;
+
+            this.running = true;        
+            const then = setTimeout(
+                () =>
+                document.getElementById(`retry-${entry.id}`).remove(),
+                document.getElementById(`forget-${entry.id}`).remove(),
+                this.running = false,
+                1000
+            );
+
+            axios.post(`/${window.VaporUi.path}/api/jobs/failed/${action}/${entry.id}`).then(then);
+        },
+    },
 };
 </script>

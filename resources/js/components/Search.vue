@@ -219,7 +219,7 @@ export default {
 
         const startTime = this.filters.startTime
             ? moment.unix(this.filters.startTime)
-            : moment().subtract(10, 'minutes');
+            : moment().subtract(48, 'hours');
 
         this.filters.startTime = startTime.local().format('YYYY-MM-DD LTS');
         this.loadEntries();
@@ -363,7 +363,7 @@ export default {
          * Gets the minutes ago options.
          */
         getMinutesAgoOptions() {
-            return Array.from(new Set([1, 5, 10, 30, this.minutesAgo].sort((a, b) => a - b))).map((value) => {
+            return Array.from(new Set([5, 30, 90, 120, 240, 480, 960, 1920, this.minutesAgo].sort((a, b) => a - b))).map((value) => {
                 return [value, moment().subtract(value, 'minutes').fromNow()];
             });
         },
